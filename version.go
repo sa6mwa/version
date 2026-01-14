@@ -43,6 +43,20 @@ func Module() string {
 	return moduleFromBuildInfo(nil)
 }
 
+// ModuleVersion returns the best available version string for the given module path
+// (without dirty suffix). If the path matches the main module, it falls back to
+// Current().
+func ModuleVersion(path string) string {
+	return moduleVersion(path, false)
+}
+
+// ModuleVersionWithDirty returns the best available version string for the given
+// module path (including dirty suffix when available). If the path matches the
+// main module, it falls back to CurrentWithDirty().
+func ModuleVersionWithDirty(path string) string {
+	return moduleVersion(path, true)
+}
+
 func moduleFromBuildInfo(info *debug.BuildInfo) string {
 	if info != nil {
 		if path := strings.TrimSpace(info.Main.Path); path != "" {
@@ -54,6 +68,55 @@ func moduleFromBuildInfo(info *debug.BuildInfo) string {
 		return fallback
 	}
 	return "unknown"
+}
+
+func moduleVersion(path string, includeDirty bool) string {
+	target := strings.TrimSpace(path)
+	if target == "" {
+		return "v0.0.0-unknown"
+	}
+	info, ok := debug.ReadBuildInfo()
+	if ok && info != nil {
+		if strings.TrimSpace(info.Main.Path) == target {
+			return currentFromBuildInfo(includeDirty)
+		}
+		return moduleVersionFromBuildInfo(info, target, includeDirty)
+	}
+	return "v0.0.0-unknown"
+}
+
+func moduleVersionFromBuildInfo(info *debug.BuildInfo, path string, includeDirty bool) string {
+	if info == nil || strings.TrimSpace(path) == "" {
+		return "v0.0.0-unknown"
+	}
+	for _, dep := range info.Deps {
+		if dep == nil {
+			continue
+		}
+		if strings.TrimSpace(dep.Path) == path {
+			if v := versionFromModule(dep, includeDirty); v != "" {
+				return v
+			}
+			return "v0.0.0-unknown"
+		}
+		if dep.Replace != nil && strings.TrimSpace(dep.Replace.Path) == path {
+			if v := versionFromModule(dep.Replace, includeDirty); v != "" {
+				return v
+			}
+			return "v0.0.0-unknown"
+		}
+	}
+	return "v0.0.0-unknown"
+}
+
+func versionFromModule(module *debug.Module, includeDirty bool) string {
+	if module == nil {
+		return ""
+	}
+	if v := strings.TrimSpace(module.Version); v != "" && v != "(devel)" {
+		return normalizeVersion(v, includeDirty)
+	}
+	return ""
 }
 
 func defaultModuleFallback() string {

@@ -29,6 +29,7 @@ func main() {
 	fmt.Println("module:", version.Module())
 	fmt.Println("version:", version.Current())
 	fmt.Println("version (dirty):", version.CurrentWithDirty())
+	fmt.Println("dep version:", version.ModuleVersion("example.com/service"))
 }
 ```
 
@@ -49,5 +50,8 @@ go build -ldflags "-X pkt.systems/version.buildVersion=v1.2.3"
   a modified working tree.
 - `version.Module()` returns the module path from build info, or the configured
   fallback, or `"unknown"` if neither is available.
+- `version.ModuleVersion(path)` returns the version for a specific dependency
+  module path (or the main module if it matches), falling back to
+  `"v0.0.0-unknown"` when build info is unavailable.
 - `version.SetDefaultModule(path)` sets the fallback module path; pass an empty
   string to clear it.

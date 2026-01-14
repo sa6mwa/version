@@ -41,6 +41,38 @@ func TestModuleFromBuildInfoUsesPath(t *testing.T) {
 	}
 }
 
+func TestModuleVersionFromBuildInfoDeps(t *testing.T) {
+	info := &debug.BuildInfo{
+		Deps: []*debug.Module{
+			{Path: "example.com/dep", Version: "v1.2.3+dirty"},
+		},
+	}
+	if got := moduleVersionFromBuildInfo(info, "example.com/dep", false); got != "v1.2.3" {
+		t.Fatalf("expected normalized dep version, got %q", got)
+	}
+	if got := moduleVersionFromBuildInfo(info, "example.com/dep", true); got != "v1.2.3+dirty" {
+		t.Fatalf("expected dirty dep version, got %q", got)
+	}
+	if got := moduleVersionFromBuildInfo(info, "example.com/missing", false); got != "v0.0.0-unknown" {
+		t.Fatalf("expected unknown for missing dep, got %q", got)
+	}
+}
+
+func TestModuleVersionFromBuildInfoReplace(t *testing.T) {
+	info := &debug.BuildInfo{
+		Deps: []*debug.Module{
+			{
+				Path:    "example.com/original",
+				Version: "v1.0.0",
+				Replace: &debug.Module{Path: "example.com/replaced", Version: "v2.0.0"},
+			},
+		},
+	}
+	if got := moduleVersionFromBuildInfo(info, "example.com/replaced", false); got != "v2.0.0" {
+		t.Fatalf("expected replaced dep version, got %q", got)
+	}
+}
+
 func TestPseudoFromBuildInfo(t *testing.T) {
 	ts := time.Date(2025, time.January, 2, 3, 4, 5, 0, time.UTC)
 	info := &debug.BuildInfo{

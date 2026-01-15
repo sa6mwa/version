@@ -42,6 +42,11 @@ Print the current version from a consuming repository:
 go run pkt.systems/version/println
 ```
 
+This command locates the nearest `go.mod` parent directory, generates a
+temporary `.version/main.go`, runs it with `go run ./.version`, and cleans up
+afterward. If `.version/main.go` already exists and is not managed by
+`pkt.systems/version/println`, the command fails with a clear error.
+
 Print semver output (strip leading `v`) and include `+dirty` when available:
 
 ```bash

@@ -25,5 +25,6 @@
 //       fmt.Println("module:", version.Module())
 //       fmt.Println("version:", version.Current())
 //       fmt.Println("dep version:", version.ModuleVersion("example.com/service"))
+//       fmt.Println("version (no v):", version.CurrentSemver())
 //   }
 package version

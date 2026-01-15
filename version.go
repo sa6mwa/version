@@ -33,6 +33,17 @@ func CurrentWithDirty() string {
 	return currentFromBuildInfo(true)
 }
 
+// CurrentSemver returns the best available version string without a leading "v".
+func CurrentSemver() string {
+	return stripLeadingV(Current())
+}
+
+// CurrentSemverWithDirty returns the best available version string without a
+// leading "v", including dirty suffix when available.
+func CurrentSemverWithDirty() string {
+	return stripLeadingV(CurrentWithDirty())
+}
+
 // Module returns the module path from build info when available.
 // If unavailable, it returns the configured fallback or "unknown".
 func Module() string {
@@ -55,6 +66,18 @@ func ModuleVersion(path string) string {
 // main module, it falls back to CurrentWithDirty().
 func ModuleVersionWithDirty(path string) string {
 	return moduleVersion(path, true)
+}
+
+// ModuleVersionSemver returns the best available version string for the given
+// module path without a leading "v".
+func ModuleVersionSemver(path string) string {
+	return stripLeadingV(ModuleVersion(path))
+}
+
+// ModuleVersionSemverWithDirty returns the best available version string for the
+// given module path without a leading "v", including dirty suffix when available.
+func ModuleVersionSemverWithDirty(path string) string {
+	return stripLeadingV(ModuleVersionWithDirty(path))
 }
 
 func moduleFromBuildInfo(info *debug.BuildInfo) string {
@@ -148,6 +171,14 @@ func normalizeVersion(v string, includeDirty bool) string {
 		return value
 	}
 	return strings.TrimSuffix(value, "+dirty")
+}
+
+func stripLeadingV(v string) string {
+	value := strings.TrimSpace(v)
+	if strings.HasPrefix(value, "v") {
+		return strings.TrimPrefix(value, "v")
+	}
+	return value
 }
 
 func pseudoFromBuildInfo(info *debug.BuildInfo, includeDirty bool) string {

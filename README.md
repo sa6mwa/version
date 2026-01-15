@@ -30,7 +30,44 @@ func main() {
 	fmt.Println("version:", version.Current())
 	fmt.Println("version (dirty):", version.CurrentWithDirty())
 	fmt.Println("dep version:", version.ModuleVersion("example.com/service"))
+	fmt.Println("version (no v):", version.CurrentSemver())
 }
+```
+
+## CLI usage
+
+Print the current version from a consuming repository:
+
+```bash
+go run pkt.systems/version/println
+```
+
+Print semver output (strip leading `v`) and include `+dirty` when available:
+
+```bash
+go run pkt.systems/version/println -semver -dirty
+```
+
+## Integration examples
+
+### go:generate
+
+Write the current version into a file during `go generate`:
+
+```go
+//go:generate sh -c "go run pkt.systems/version/println > version.txt"
+```
+
+### Makefile
+
+Use the semver output when naming a release artifact:
+
+```make
+VERSION := $(shell go run pkt.systems/version/println -semver)
+
+release:
+\t@echo "building release $(VERSION)"
+\t@zip -r "dist/myapp-$(VERSION).zip" ./bin/myapp
 ```
 
 ## Build-time version override
@@ -53,5 +90,6 @@ go build -ldflags "-X pkt.systems/version.buildVersion=v1.2.3"
 - `version.ModuleVersion(path)` returns the version for a specific dependency
   module path (or the main module if it matches), falling back to
   `"v0.0.0-unknown"` when build info is unavailable.
+- `version.CurrentSemver()` strips a leading `v` from the resolved version, if present.
 - `version.SetDefaultModule(path)` sets the fallback module path; pass an empty
   string to clear it.

@@ -17,6 +17,19 @@ func TestCurrentPrefersBuildVersion(t *testing.T) {
 	}
 }
 
+func TestCurrentSemverStripsLeadingV(t *testing.T) {
+	old := buildVersion
+	buildVersion = "v1.2.3"
+	t.Cleanup(func() { buildVersion = old })
+
+	if got := CurrentSemver(); got != "1.2.3" {
+		t.Fatalf("expected semver without v, got %q", got)
+	}
+	if got := CurrentSemverWithDirty(); got != "1.2.3" {
+		t.Fatalf("expected semver without v, got %q", got)
+	}
+}
+
 func TestModuleFromBuildInfoFallback(t *testing.T) {
 	SetDefaultModule("example.com/service")
 	t.Cleanup(func() { SetDefaultModule("") })
